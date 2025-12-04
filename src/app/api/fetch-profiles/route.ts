@@ -17,7 +17,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ profiles })
   } catch (error) {
-    console.error("[v0] Error fetching profiles:", error)
     return NextResponse.json({ error: "Failed to fetch profiles" }, { status: 500 })
   }
 }

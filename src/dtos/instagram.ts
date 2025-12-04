@@ -6,3 +6,10 @@ export interface InstagramProfile {
   avg_comments: number
 }
 
+export interface InstagramPublicData {
+  username: string
+  followers_count: number
+  follows_count: number
+  media_count: number
+}
+
