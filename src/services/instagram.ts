@@ -1,22 +1,60 @@
-import type { InstagramProfile } from "@/dtos/instagram"
+import type { InstagramProfile } from "@/dtos/instagram";
+import { crawlerService } from "./crawler";
+import {
+  estimateEngagementRate,
+  estimateAverageLikes,
+  estimateAverageComments,
+  generateMockData,
+} from "./instagram-estimator";
 
-export async function fetchInstagramProfile(username: string): Promise<InstagramProfile> {
-  await new Promise((resolve) => setTimeout(resolve, 500))
+export async function fetchInstagramProfile(
+  username: string
+): Promise<InstagramProfile> {
+  try {
+    if (!crawlerService.isConfigured()) {
+      return buildMockProfile(username);
+    }
 
-  const hash = username.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0)
-  const followers = Math.floor(10000 + ((hash * 1000) % 500000))
-  const engagement = 2 + (hash % 10)
+    const publicData = await crawlerService.fetchPublicProfile(username);
+    const followers = publicData.followers_count;
+    const engagementRate = estimateEngagementRate(followers);
+    const avgLikes = estimateAverageLikes(followers, engagementRate);
+    const avgComments = estimateAverageComments(followers, engagementRate);
 
-  return {
-    username,
-    followers,
-    engagement_rate: engagement,
-    avg_likes: Math.floor(followers * (engagement / 100) * 0.7),
-    avg_comments: Math.floor(followers * (engagement / 100) * 0.3),
+    return {
+      username: publicData.username,
+      followers,
+      engagement_rate: engagementRate,
+      avg_likes: avgLikes,
+      avg_comments: avgComments,
+    };
+  } catch (error) {
+    return buildMockProfile(username);
   }
 }
 
-export async function fetchMultipleProfiles(usernames: string[]): Promise<InstagramProfile[]> {
-  return Promise.all(usernames.map((username) => fetchInstagramProfile(username)))
+export async function fetchMultipleProfiles(
+  usernames: string[]
+): Promise<InstagramProfile[]> {
+  return Promise.all(
+    usernames.map((username) => fetchInstagramProfile(username))
+  );
 }
 
+function buildMockProfile(username: string): InstagramProfile {
+  const mockData = generateMockData(username);
+
+  return {
+    username,
+    followers: mockData.followers,
+    engagement_rate: mockData.engagementRate,
+    avg_likes: estimateAverageLikes(
+      mockData.followers,
+      mockData.engagementRate
+    ),
+    avg_comments: estimateAverageComments(
+      mockData.followers,
+      mockData.engagementRate
+    ),
+  };
+}
