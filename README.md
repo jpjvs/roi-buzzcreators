@@ -50,6 +50,49 @@ Por padrão os dados são mockados. Para dados reais:
 2. Ajuste domínios (ex.: `calculadora.buzzcreators.com.br`)
 3. Revise metadados em `src/app/layout.tsx`
 
+## Rate Limiting e Segurança
+
+Para proteger a ferramenta gratuita contra abusos, preservar quotas de APIs externas (como Meta) e controlar custos, implementamos mecanismos de limitação de acesso:
+
+### Mecanismos Implementados
+
+1. **Throttling Baseado em IP**
+   - Limite: 10 requisições por hora por endereço IP
+   - Aplica-se a todas as rotas da API (`/api/*`)
+   - Resposta HTTP 429 quando excedido
+
+2. **Fingerprinting Básico**
+   - Combina endereço IP com User-Agent do navegador
+   - Ajuda a prevenir evasão via rotação de IPs
+   - Identificação simples sem armazenamento de dados pessoais
+
+3. **Circuit Breaker Interno**
+   - Monitora uso global da aplicação
+   - Limite: 1000 requisições por hora no total
+   - Resposta HTTP 503 quando excedido, indicando serviço temporariamente indisponível
+
+### Implementação Técnica
+
+- **Arquivo:** `middleware.ts` (raiz do projeto)
+- **Tecnologia:** Middleware do Next.js (server-side)
+- **Armazenamento:** In-memory (Map) - adequado para desenvolvimento e pequenas cargas
+- **Recomendação para Produção:** Migrar para Redis para persistência e escalabilidade
+
+### Configurações
+
+As configurações estão hardcoded no middleware para simplicidade. Para ajustar limites:
+
+```typescript
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hora
+const RATE_LIMIT_MAX_REQUESTS = 10; // por IP
+const CIRCUIT_BREAKER_THRESHOLD = 1000; // global
+```
+
+### Monitoramento
+
+- Logs de rate limiting podem ser adicionados ao middleware para observabilidade
+- Considere integrar com ferramentas como Vercel Analytics ou DataDog para métricas avançadas
+
 ## Contatos
 - **Munique** – integração CRM
 - **Victor Lopes** – owner do projeto
