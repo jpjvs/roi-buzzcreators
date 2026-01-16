@@ -110,7 +110,7 @@ Executa testes unitários da lógica de rate limiting, incluindo:
 **Backend (Django):**
 No projeto `buzzcreators-meta-crawler`:
 ```bash
-pytest backend_tests.py
+pytest
 ```
 Testa o endpoint `get_public_profile_for_roi` com autenticação, validação e tratamento de erros.
 
