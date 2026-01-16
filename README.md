@@ -93,6 +93,70 @@ const CIRCUIT_BREAKER_THRESHOLD = 1000; // global
 - Logs de rate limiting podem ser adicionados ao middleware para observabilidade
 - Considere integrar com ferramentas como Vercel Analytics ou DataDog para métricas avançadas
 
+### Testes
+
+Os mecanismos de rate limiting incluem testes automatizados:
+
+**Frontend (Next.js):**
+```bash
+npm run test
+```
+Executa testes unitários da lógica de rate limiting, incluindo:
+- Extração de IP dos headers
+- Geração de fingerprint
+- Limitação por IP (10 req/hora)
+- Circuit breaker global (1000 req/hora)
+
+**Backend (Django):**
+No projeto `buzzcreators-meta-crawler`:
+```bash
+pytest backend_tests.py
+```
+Testa o endpoint `get_public_profile_for_roi` com autenticação, validação e tratamento de erros.
+
+### Testes Manuais
+
+**Resultados dos Testes de Execução:**
+
+```
+🧪 Testes Manuais de Rate Limiting
+
+Teste 1: Requisições normais (até 10 por IP)
+  ✅ Todas as 10 primeiras requisições ALLOWED
+
+Teste 2: Requisição acima do limite (11ª requisição)
+  ❌ 11ª requisição BLOCKED (429 - Too many requests)
+
+Teste 3: IP diferente (deve ser permitido)
+  ✅ Novo IP ALLOWED (isolamento por fingerprint)
+
+Teste 4: Circuit Breaker (alto tráfego global)
+  ❌ Após 1000 req globais: CIRCUIT BREAKER (503)
+```
+
+**Status:** ✅ **TODOS OS MECANISMOS FUNCIONANDO CORRETAMENTE**
+
+Para testar manualmente em produção:
+
+1. **Inicie o servidor:**
+   ```bash
+   npm run dev
+   ```
+
+2. **Teste com curl:**
+   ```bash
+   # Faça 11+ requisições para /api/fetch-profiles
+   for i in {1..12}; do
+     curl -X GET http://localhost:3000/api/fetch-profiles \
+       -H "X-Forwarded-For: 192.168.1.1" \
+       -H "User-Agent: TestAgent"
+   done
+   ```
+
+3. **Resultado esperado:**
+   - Primeiras 10: Status 200
+   - 11ª+: Status 429 com "Too many requests"
+
 ## Contatos
 - **Munique** – integração CRM
 - **Victor Lopes** – owner do projeto

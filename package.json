@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "lint": "eslint .",
-    "start": "next start"
+    "start": "next start",
+    "test": "node test-rate-limiting.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
