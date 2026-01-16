@@ -10,7 +10,7 @@ const ipRequestCounts = new Map<string, { count: number; resetTime: number }>();
 const globalRequestCount = { count: 0, resetTime: Date.now() + RATE_LIMIT_WINDOW_MS };
 
 // Helper to get client IP
-function getClientIP(request: NextRequest): string {
+export function getClientIP(request: NextRequest): string {
   const forwarded = request.headers.get('x-forwarded-for');
   const realIP = request.headers.get('x-real-ip');
   const clientIP = request.headers.get('x-client-ip');
@@ -28,14 +28,14 @@ function getClientIP(request: NextRequest): string {
 }
 
 // Helper to generate fingerprint (basic: IP + User-Agent)
-function generateFingerprint(request: NextRequest): string {
+export function generateFingerprint(request: NextRequest): string {
   const ip = getClientIP(request);
   const userAgent = request.headers.get('user-agent') || '';
   return `${ip}-${userAgent}`;
 }
 
 // Check rate limit
-function checkRateLimit(fingerprint: string): boolean {
+export function checkRateLimit(fingerprint: string): boolean {
   const now = Date.now();
   const entry = ipRequestCounts.get(fingerprint);
 
@@ -53,7 +53,7 @@ function checkRateLimit(fingerprint: string): boolean {
 }
 
 // Check circuit breaker
-function checkCircuitBreaker(): boolean {
+export function checkCircuitBreaker(): boolean {
   const now = Date.now();
   if (now > globalRequestCount.resetTime) {
     globalRequestCount.count = 0;
